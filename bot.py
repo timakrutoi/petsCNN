@@ -36,7 +36,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
+    update.message.reply_text('Try command /Breeds')
 
 
 def echo(update: Update, context: CallbackContext) -> None:
@@ -68,8 +68,10 @@ def file_handler(update, context):
 
 
 def final_predict(pic_name, model_path='checkpoints/t5/model_e2_acc0.902'):
-    # todo make .jpg filter
     # todo say its bad prediction if its bad
+
+    if not pic_name.endswith('.jpg'):
+        return 'Sorry. Its not a valid format. Use jpg.'
 
     labels = {
         '0': 'Maine_Coon',
@@ -125,9 +127,58 @@ def final_predict(pic_name, model_path='checkpoints/t5/model_e2_acc0.902'):
     out += 'petsCNN thinks its {}\n'.format(labels[f'{l[0, 0]}'])
     out += 'other likely predictions:\n'
     for i in range(1, 5):
-        out += '\t({}) its {}\n'.format(i, labels[f'{l[0, i]}'])
+        out += '\t\t\t({}) its {}\n'.format(i, labels[f'{l[0, i]}'])
 
     return out
+
+
+def breed_list_command(update: Update, context: CallbackContext):
+
+    labels = {
+        '0': 'Maine_Coon',
+        '1': 'leonberger',
+        '2': 'pug',
+        '3': 'Bombay',
+        '4': 'beagle',
+        '5': 'keeshond',
+        '6': 'havanese',
+        '7': 'newfoundland',
+        '8': 'scottish_terrier',
+        '9': 'Abyssinian',
+        '10': 'american_bulldog',
+        '11': 'Siamese',
+        '12': 'saint_bernard',
+        '13': 'german_shorthaired',
+        '14': 'shiba_inu',
+        '15': 'samoyed',
+        '16': 'Sphynx',
+        '17': 'staffordshire_bull_terrier',
+        '18': 'chihuahua',
+        '19': 'great_pyrenees',
+        '20': 'Bengal',
+        '21': 'Russian_Blue',
+        '22': 'basset_hound',
+        '23': 'english_setter',
+        '24': 'Persian',
+        '25': 'american_pit_bull_terrier',
+        '26': 'yorkshire_terrier',
+        '27': 'japanese_chin',
+        '28': 'Birman',
+        '29': 'Egyptian_Mau',
+        '30': 'British_Shorthair',
+        '31': 'boxer',
+        '32': 'wheaten_terrier',
+        '33': 'pomeranian',
+        '34': 'Ragdoll',
+        '35': 'english_cocker_spaniel',
+        '36': 'miniature_pinscher'
+    }
+    out = 'List of all available breeds:\n'
+
+    for i, j in enumerate(labels.values()):
+        out += f'{i+1}) {j}\n'
+
+    update.message.reply_text(out)
 
 
 def main() -> None:
@@ -143,9 +194,9 @@ def main() -> None:
     dispatcher = updater.dispatcher
 
     # on different commands - answer in Telegram
-    # todo redo help handler and create command to get all breeds
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("help", help_command))
+    dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('help', help_command))
+    dispatcher.add_handler(CommandHandler(['Breeds', 'breeds'], breed_list_command))
     dispatcher.add_handler(MessageHandler(Filters.document, file_handler))
     dispatcher.add_handler(MessageHandler(Filters.photo, photo_handler))
 
