@@ -8,18 +8,20 @@ import numpy as np
 
 
 def predict(pic, model):
-    image = transforms.Resize((150, 150))(read_image(pic))
+    image = transforms.Resize((300, 300))(read_image(pic))
 
-    image = image.reshape((1, 3, 150, 150))
+    image = image.reshape((1, 3, 300, 300))
 
-    y = model(image.float()/256)
+    model.eval()
+    y = model(image.float())
+
     return y
 
 
 if __name__ == '__main__':
 
-    check_name = 'checkpoints/model_t2_e5_acc0.200'
-    pic_name = '/home/tima/Desktop/oxfordPets/images/Abyssinian_3.jpg'
+    check_name = 'checkpoints/t5/model_e0_acc0.879'
+    pic_name = '/home/tima/Desktop/oxfordPets/images/Maine_Coon_1.jpg'
 
     labels = {
         '0': 'Maine_Coon',
@@ -72,5 +74,5 @@ if __name__ == '__main__':
 
     print('petsCNN thinks its {} with {} confidence'.format(labels[f'{l[0, 0]}'], res[0, l[0, 0]]))
     print('other likely predictions: ')
-    for i in range(1, 3):
-        print('\tits {} with {} confidence'.format(labels[f'{l[0, i]}'], res[0, l[0, i]]))
+    for i in range(1, 5):
+        print('\t({}) its {} with {} confidence'.format(i, labels[f'{l[0, i]}'], res[0, l[0, i]]))
