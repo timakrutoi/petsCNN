@@ -1,4 +1,6 @@
 import glob
+import random
+
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -83,14 +85,16 @@ def save2f(fname, l, path='/home/tima/Desktop/oxfordPets/'):
 if __name__ == '__main__':
     l = glob.glob(glob.escape('/home/tima/Desktop/oxfordPets/images/') + '*')
 
+    random.shuffle(l)
+
     g = int(0.7 * len(l))
 
     train = l[:g]
     test = l[g:]
 
-    save2f('test.csv', l)
-    # save2f('annotations_train.csv', train)
-    # save2f('annotations_test.csv', test)
+    # save2f('test.csv', l)
+    save2f('annotations_train.csv', train)
+    save2f('annotations_test.csv', test)
 
     print(len(train))
     print(len(test))

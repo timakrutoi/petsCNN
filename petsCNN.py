@@ -24,11 +24,7 @@ class petsCNN(nn.Module):
     def __init__(self):
         super(petsCNN, self).__init__()
 
-        # 250 240 120 110 55
-        # 150 140 70 60 30
-
-        # 150 146 73 70 35
-        self.mod = torchvision.models.resnet34()
+        self.mod = torchvision.models.resnet50(pretrained=True)
 
         # self.classifier = nn.Sequential(
         #     nn.BatchNorm1d(1000),
@@ -55,6 +51,14 @@ class petsCNN(nn.Module):
 
         return x
 
+    def freeze(self):
+        for params in self.mod.parameters():
+            params.requires_grad = False
+
+    def unfreeze(self):
+        for params in self.mod.parameters():
+            params.requires_grad = True
+
 
 class OxfordPets(Dataset):
     def __init__(self, annotations_file, img_dir, batch_size=100, transform=None, target_transform=None):
@@ -71,7 +75,7 @@ class OxfordPets(Dataset):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
         # p = transforms.Compose([transforms.Resize((150, 150))])
 
-        image = transforms.Resize((150, 150))(read_image(img_path))
+        image = transforms.Resize((300, 300))(read_image(img_path))
 
         # image = image.reshape((1, 3, 150, 150))
         label = self.img_labels.iloc[idx, 1]
@@ -151,8 +155,8 @@ if __name__ == "__main__":
     }
 
     data_path = '/home/tima/Desktop/oxfordPets/'
-    total_epoch = 20
-    start_epoch = 10
+    total_epoch = 30
+    start_epoch = 0
     make_checkpoints = True
     checkpoints_path = 'checkpoints/'
 
@@ -160,8 +164,9 @@ if __name__ == "__main__":
     momentum = 0.9
 
     model = petsCNN()
-    checkpoint = torch.load('checkpoints/model_t2_e9_acc0.210')
-    model.load_state_dict(checkpoint['model_state_dict'])
+    # checkpoint = torch.load('checkpoints/t4/model_e9_acc0.687')
+    # model.load_state_dict(checkpoint['model_state_dict'])
+    model.freeze()
 
     criterion = nn.CrossEntropyLoss()
 
@@ -198,7 +203,10 @@ if __name__ == "__main__":
             y = model(x)
             loss = criterion(y, target)
 
-            test_loss += loss.item()
+            if test_loss == 0:
+                test_loss = loss.item()
+            else:
+                test_loss = (test_loss + loss.item()) / 2
             _, predict = y.max(1)
             total_cnt += target.size(0)
             correct_cnt += predict.eq(target).sum().item()
@@ -214,5 +222,5 @@ if __name__ == "__main__":
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': test_loss,
-            }, checkpoints_path + 'model_t2_e{}_acc{:.3f}'.format(epoch, acc))
+            }, checkpoints_path + 't5/model_e{}_acc{:.3f}'.format(epoch, acc))
 
