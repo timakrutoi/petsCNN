@@ -1,27 +1,39 @@
 import argparse
 
+# old
 from petsCNN import petsCNN
 import torch
+
+# new
+import onnxruntime
+
 from torchvision.io import read_image
 from torchvision import transforms
 import numpy as np
 
 
-def predict(pic, model):
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+
+def predict(pic, model='petsCNN.onnx'):
     image = transforms.Resize((300, 300))(read_image(pic))
+    img = image.reshape((1, 3, 300, 300)).float()
 
-    image = image.reshape((1, 3, 300, 300))
+    ort_session = onnxruntime.InferenceSession(model)
 
-    model.eval()
-    y = model(image.float())
+    ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(img)}
+    ort_outs = ort_session.run(None, ort_inputs)
+    res = ort_outs[0]
 
-    return y
+    return res
 
 
 if __name__ == '__main__':
 
     check_name = 'checkpoints/t5/model_e0_acc0.879'
-    pic_name = '/home/tima/Desktop/oxfordPets/images/Maine_Coon_1.jpg'
+    pic_name = 'data/pug_47.jpg'
+    model_name = 'petsCNN.onnx'
 
     labels = {
         '0': 'Maine_Coon',
@@ -63,11 +75,18 @@ if __name__ == '__main__':
         '36': 'miniature_pinscher'
     }
 
-    model = petsCNN()
-    checkpoint = torch.load(check_name)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    if False:
+        image = transforms.Resize((300, 300))(read_image(pic_name))
+        img = image.reshape((1, 3, 300, 300)).float()
 
-    res = predict(pic_name, model).detach().numpy()
+        ort_session = onnxruntime.InferenceSession(model_name)
+
+        ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(img)}
+        ort_outs = ort_session.run(None, ort_inputs)
+        res = ort_outs[0]
+    else:
+        res = predict(pic_name, model_name)
+
     # print(res)
     l = np.argsort(res)
     l = np.flip(l)
