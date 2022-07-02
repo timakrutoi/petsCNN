@@ -10,10 +10,7 @@ from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
 from main import predict
-from petsCNN import petsCNN
-import torch
 import numpy as np
-
 
 # Enable logging
 logging.basicConfig(
@@ -67,7 +64,7 @@ def file_handler(update, context):
     update.message.reply_text(final_predict(pic_name))
 
 
-def final_predict(pic_name, model_path='checkpoints/t5/model_e2_acc0.902'):
+def final_predict(pic_name, model_name='petsCNN.onnx'):
     # todo say its bad prediction if its bad
 
     if not pic_name.endswith('.jpg'):
@@ -112,11 +109,6 @@ def final_predict(pic_name, model_path='checkpoints/t5/model_e2_acc0.902'):
         '35': 'english_cocker_spaniel',
         '36': 'miniature_pinscher'
     }
-
-    # check_name = 'checkpoints/t5/model_e2_acc0.902'
-    model = petsCNN()
-    checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint['model_state_dict'])
 
     res = predict(pic_name, model).detach().numpy()
     l = np.argsort(res)
@@ -185,9 +177,10 @@ def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
     f = open('token')
-    TOKEN = f.read()
+    TOKEN = f.read()[:-1]
     # bot = telegram.Bot(TOKEN)
 
+    print(f'token is {TOKEN}')
     updater = Updater(TOKEN)
 
     # Get the dispatcher to register handlers
