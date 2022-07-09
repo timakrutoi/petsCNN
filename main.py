@@ -1,10 +1,3 @@
-import argparse
-
-# old
-from petsCNN import petsCNN
-import torch
-
-# new
 import onnxruntime
 
 from torchvision.io import read_image
