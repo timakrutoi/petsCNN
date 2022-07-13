@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# pylint: disable=C0116,W0613
-# This program is dedicated to the public domain under the CC0 license.
 
 
 import logging
@@ -20,8 +18,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# Define a few command handlers. These usually take the two arguments update and
-# context.
 def start(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
@@ -42,11 +38,10 @@ def echo(update: Update, context: CallbackContext) -> None:
 
 
 def photo_handler(update, context):
-    # print(update.message['photo'][-1].get_file()['file_path'].split(sep='/')[-1])
+    """Download photo and call predict()"""
     doc = update.message['photo'][-1].get_file()
     file_name = update.message['photo'][-1].get_file()['file_path'].split(sep='/')[-1]
 
-    # fileName = update.message['photo']['photo_name']
     pic_name = f'saved_from_tg/{file_name}'
     context.bot.get_file(doc).download(pic_name)
 
@@ -56,6 +51,7 @@ def photo_handler(update, context):
 
 
 def file_handler(update, context):
+    """Download file and call predict()"""
     fileName = update.message['document']['file_name']
     pic_name = f'saved_from_tg/{fileName}'
     context.bot.get_file(update.message.document).download(pic_name)
@@ -110,16 +106,19 @@ def final_predict(pic_name, model_name='petsCNN.onnx'):
         '36': 'miniature_pinscher'
     }
 
-    res = predict(pic_name, model).detach().numpy()
+    res = predict(pic_name, model_name)
     l = np.argsort(res)
     l = np.flip(l)
 
     out = ''
 
-    out += 'petsCNN thinks its {}\n'.format(labels[f'{l[0, 0]}'])
-    out += 'other likely predictions:\n'
-    for i in range(1, 5):
-        out += '\t\t\t({}) its {}\n'.format(i, labels[f'{l[0, i]}'])
+    if res[0, l[0,0]] > 10:
+        out += 'petsCNN thinks its {}\n'.format(labels[f'{l[0, 0]}'])
+        out += 'other likely predictions:\n'
+        for i in range(1, 5):
+            out += '\t\t\t({}) its {}\n'.format(i, labels[f'{l[0, i]}'])
+    else:
+        out += 'petsCNN is not sure about this, try another photo pls'
 
     return out
 
@@ -178,7 +177,6 @@ def main() -> None:
     # Create the Updater and pass it your bot's token.
     f = open('token')
     TOKEN = f.read()[:-1]
-    # bot = telegram.Bot(TOKEN)
 
     print(f'token is {TOKEN}')
     updater = Updater(TOKEN)
